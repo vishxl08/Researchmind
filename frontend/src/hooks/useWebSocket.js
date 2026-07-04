@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import useResearchStore from '../store/researchStore';
+import { API_BASE_URL } from '../api/client';
+
+const WS_BASE_URL = API_BASE_URL.replace(/^http/, 'ws');
 
 const useWebSocket = (jobId) => {
   const socketRef = useRef(null);
@@ -14,8 +17,7 @@ const useWebSocket = (jobId) => {
 
     const connect = () => {
       const token = localStorage.getItem('access_token');
-      // Build WS URL. Fallback to current host if settings not specified
-      const wsUrl = `ws://localhost:8000/ws/research/${jobId}/?token=${token}`;
+      const wsUrl = `${WS_BASE_URL}/ws/research/${jobId}/?token=${token}`;
       
       console.log(`Connecting to WebSocket: ${wsUrl}`);
       const socket = new WebSocket(wsUrl);
