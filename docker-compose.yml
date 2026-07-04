@@ -1,0 +1,157 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database (optional, for production)
+  postgres:
+    image: postgres:15-alpine
+    container_name: researchmind_postgres
+    environment:
+      POSTGRES_DB: researchmind
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - researchmind_network
+    profiles:
+      - production
+
+  # Qdrant Vector Database
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: researchmind_qdrant
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    environment:
+      - QDRANT_API_KEY=${QDRANT_API_KEY:-qdrant-api-key}
+    networks:
+      - researchmind_network
+    profiles:
+      - optional
+
+  # Redis (for production Celery and Cache)
+  redis:
+    image: redis:7-alpine
+    container_name: researchmind_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - researchmind_network
+    profiles:
+      - production
+
+  # Django Backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: researchmind_backend
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=True
+      - SECRET_KEY=django-insecure-local-development-key
+      - ALLOWED_HOSTS=*
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/researchmind
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - SERPER_API_KEY=${SERPER_API_KEY}
+      - QDRANT_URL=http://qdrant:6333
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - CHANNEL_LAYER_REDIS_URL=redis://redis:6379/1
+      - CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
+    depends_on:
+      - postgres
+      - qdrant
+      - redis
+    volumes:
+      - ./backend:/app
+    networks:
+      - researchmind_network
+    profiles:
+      - full
+
+  # Celery Worker
+  celery:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: researchmind_celery
+    command: celery -A config worker -l info
+    environment:
+      - DEBUG=False
+      - SECRET_KEY=django-insecure-local-development-key
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/researchmind
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - SERPER_API_KEY=${SERPER_API_KEY}
+      - QDRANT_URL=http://qdrant:6333
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      - postgres
+      - qdrant
+      - redis
+    volumes:
+      - ./backend:/app
+    networks:
+      - researchmind_network
+    profiles:
+      - full
+
+  # Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: researchmind_frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_API_URL=http://localhost:8000
+      - VITE_WS_URL=ws://localhost:8000
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+    networks:
+      - researchmind_network
+    profiles:
+      - full
+
+  # Nginx Reverse Proxy (optional, for production)
+  nginx:
+    image: nginx:alpine
+    container_name: researchmind_nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./ssl:/etc/nginx/ssl
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - researchmind_network
+    profiles:
+      - production
+
+volumes:
+  postgres_data:
+  qdrant_data:
+  redis_data:
+
+networks:
+  researchmind_network:
+    driver: bridge

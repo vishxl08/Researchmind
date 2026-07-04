@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f5f7;
+            color: #333333;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            background-color: #ffffff;
+            margin: 0 auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            overflow: hidden;
+            border: 1px solid #e1e4e8;
+        }
+        .header {
+            background-image: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: #ffffff;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+        .content {
+            padding: 30px 20px;
+            line-height: 1.6;
+        }
+        .content h2 {
+            color: #1f2937;
+            margin-top: 0;
+            font-size: 20px;
+        }
+        .summary-box {
+            background-color: #f9fafb;
+            border-left: 4px solid #4f46e5;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 6px 6px 0;
+        }
+        .btn {
+            display: inline-block;
+            background-color: #4f46e5;
+            color: #ffffff !important;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-weight: 600;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .footer {
+            background-color: #f9fafb;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #6b7280;
+            border-top: 1px solid #e5e7eb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>ResearchMind</h1>
+        </div>
+        <div class="content">
+            <h2>Hi {{ user.username }},</h2>
+            <p>Your autonomous research report has been generated successfully.</p>
+            
+            <div class="summary-box">
+                <strong>Query:</strong> {{ report.job.query }}<br>
+                <strong>Report Title:</strong> {{ report.title }}<br>
+                <strong>Confidence Score:</strong> {{ report.confidence_score|floatformat:2 }}%
+            </div>
+            
+            <p><strong>Executive Summary Preview:</strong></p>
+            <p>{{ report.executive_summary|truncatewords:60 }}</p>
+            
+            <div style="text-align: center;">
+                <a href="{{ url }}" class="btn">View Full Report</a>
+            </div>
+            
+            <p>Best regards,<br>The ResearchMind Team</p>
+        </div>
+        <div class="footer">
+            This is an automated email from ResearchMind. Please do not reply directly.
+        </div>
+    </div>
+</body>
+</html>
