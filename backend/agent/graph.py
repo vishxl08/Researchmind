@@ -193,9 +193,23 @@ def call_llm(system_prompt: str, user_prompt: str, response_format_json: bool = 
         'canopylabs/orpheus-v1-english'
     ]
 
-    # Remove duplicates preserving order
+    deprecated_set = {
+        'llama-3.3-70b-versatile',
+        'llama-3.1-70b-versatile',
+        'llama-3.1-8b-instant',
+        'llama3-70b-8192',
+        'llama3-8b-8192',
+        'mixtral-8x7b-32768'
+    }
+
+    # Remove duplicates and deprecated models
     seen_m = set()
-    models_to_try = [m for m in candidate_models if m and not (m in seen_m or seen_m.add(m))]
+    models_to_try = [
+        m for m in candidate_models 
+        if m and m not in deprecated_set and not (m in seen_m or seen_m.add(m))
+    ]
+    if not models_to_try:
+        models_to_try = ['qwen/qwen3.8-27b', 'openai/gpt-oss-120b', 'allam-2-7b']
 
     last_err = None
     for model_name in models_to_try:
