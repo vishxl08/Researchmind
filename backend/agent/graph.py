@@ -182,17 +182,15 @@ def call_llm(system_prompt: str, user_prompt: str, response_format_json: bool = 
             ])
         return synthesize_structured_report(user_prompt)
 
-    # 1. Start with configured model & dynamic active Groq models
+    # 1. Start with dynamic active models & verified active Groq models
     dynamic_models = fetch_active_groq_models(api_key)
-    candidate_models = [getattr(settings, 'GROQ_MODEL', 'llama-3.3-70b-versatile')] + dynamic_models + [
-        'llama-3.3-70b-versatile',
-        'llama-3.1-70b-versatile',
-        'llama-3.1-8b-instant',
-        'llama3-70b-8192',
-        'llama3-8b-8192',
+    candidate_models = dynamic_models + [
+        getattr(settings, 'GROQ_MODEL', 'qwen/qwen3.8-27b'),
         'qwen/qwen3.8-27b',
         'openai/gpt-oss-120b',
-        'allam-2-7b'
+        'openai/gpt-oss-20b',
+        'allam-2-7b',
+        'canopylabs/orpheus-v1-english'
     ]
 
     # Remove duplicates preserving order

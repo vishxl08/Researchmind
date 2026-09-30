@@ -148,7 +148,7 @@ QDRANT_PATH = os.path.join(BASE_DIR, 'qdrant_data')
 
 # Groq Configurations
 GROQ_API_KEY = config('GROQ_API_KEY', default='')
-GROQ_MODEL = config('GROQ_MODEL', default='llama-3.3-70b-versatile')
+GROQ_MODEL = config('GROQ_MODEL', default='qwen/qwen3.8-27b')
 
 # Serper Configurations
 SERPER_API_KEY = config('SERPER_API_KEY', default='')
